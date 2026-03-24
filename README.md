@@ -28,3 +28,18 @@ The **CarnaCode 2026** challenge consists of implementing all 23 Design Patterns
 ### eBook - Design Patterns Fundamentals
 
 My main source of knowledge during the challenge was the free eBook [Design Patterns Fundamentals](https://lp.balta.io/ebook-fundamentos-design-patterns).
+
+## What was done to apply the Adapter pattern
+
+- Created a standard contract for the checkout flow using `IPaymentProcessor`, with `ProcessPayment`, `RefundPayment`, and `CheckStatus`.
+- Kept `CheckoutService` dependent only on this interface, so the checkout logic remains unchanged regardless of payment provider.
+- Implemented `PaymentAdapter` to wrap `LegacyPaymentSystem` and make it compatible with `IPaymentProcessor`.
+- Mapped incompatible legacy inputs in `PaymentAdapter.ProcessPayment`:
+  - `Cvv` string -> `int`
+  - `decimal` amount -> `double`
+  - `ExpirationDate` -> month/year parameters
+- Converted legacy response (`LegacyTransactionResponse`) into the modern result model (`PaymentResult`), including success flag, transaction id, and message.
+- Adapted refund and status operations:
+  - `RefundPayment` delegates to `ReverseTransaction`
+  - `CheckStatus` converts legacy status string to `PaymentStatus`
+- Wired the application in `Challenge.cs` by injecting `PaymentAdapter` into `CheckoutService`, allowing modern and legacy processors to coexist transparently.
