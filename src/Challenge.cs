@@ -4,45 +4,12 @@
 // O código atual não consegue usar o sistema legado sem grandes mudanças na aplicação
 
 using System;
+using DesignPatternChallenge.Processors;
+using DesignPatternChallenge.Responses;
+using DesignPatternChallenge.Services;
 
 namespace DesignPatternChallenge
 {
-    // Contexto: Sistema moderno de e-commerce com interface padronizada
-    // Precisa integrar com sistema legado que tem interface completamente diferente
-    
-    // Interface moderna que a aplicação usa
-    public interface IPaymentProcessor
-    {
-        PaymentResult ProcessPayment(PaymentRequest request);
-        bool RefundPayment(string transactionId, decimal amount);
-        PaymentStatus CheckStatus(string transactionId);
-    }
-
-    public class PaymentRequest
-    {
-        public string CustomerEmail { get; set; }
-        public decimal Amount { get; set; }
-        public string CreditCardNumber { get; set; }
-        public string Cvv { get; set; }
-        public DateTime ExpirationDate { get; set; }
-        public string Description { get; set; }
-    }
-
-    public class PaymentResult
-    {
-        public bool Success { get; set; }
-        public string TransactionId { get; set; }
-        public string Message { get; set; }
-    }
-
-    public enum PaymentStatus
-    {
-        Pending,
-        Approved,
-        Declined,
-        Refunded
-    }
-
     // Sistema legado com interface completamente diferente
     public class LegacyPaymentSystem
     {
@@ -84,80 +51,7 @@ namespace DesignPatternChallenge
             return "APPROVED";
         }
     }
-
-    public class LegacyTransactionResponse
-    {
-        public string AuthCode { get; set; }
-        public string ResponseCode { get; set; }
-        public string ResponseMessage { get; set; }
-        public string TransactionRef { get; set; }
-    }
-
-    // Implementação moderna que funciona bem
-    public class ModernPaymentProcessor : IPaymentProcessor
-    {
-        public PaymentResult ProcessPayment(PaymentRequest request)
-        {
-            Console.WriteLine("[Processador Moderno] Processando pagamento...");
-            return new PaymentResult
-            {
-                Success = true,
-                TransactionId = Guid.NewGuid().ToString(),
-                Message = "Pagamento aprovado"
-            };
-        }
-
-        public bool RefundPayment(string transactionId, decimal amount)
-        {
-            Console.WriteLine($"[Processador Moderno] Reembolsando {amount:C}");
-            return true;
-        }
-
-        public PaymentStatus CheckStatus(string transactionId)
-        {
-            return PaymentStatus.Approved;
-        }
-    }
-
-    // Classe da aplicação que usa a interface moderna
-    public class CheckoutService
-    {
-        private readonly IPaymentProcessor _paymentProcessor;
-
-        public CheckoutService(IPaymentProcessor paymentProcessor)
-        {
-            _paymentProcessor = paymentProcessor;
-        }
-
-        public void CompleteOrder(string customerEmail, decimal amount, string cardNumber)
-        {
-            Console.WriteLine($"\n=== Finalizando Pedido ===");
-            Console.WriteLine($"Cliente: {customerEmail}");
-            Console.WriteLine($"Valor: {amount:C}\n");
-
-            var request = new PaymentRequest
-            {
-                CustomerEmail = customerEmail,
-                Amount = amount,
-                CreditCardNumber = cardNumber,
-                Cvv = "123",
-                ExpirationDate = new DateTime(2026, 12, 31),
-                Description = "Compra de produtos"
-            };
-
-            var result = _paymentProcessor.ProcessPayment(request);
-
-            if (result.Success)
-            {
-                Console.WriteLine($"✅ Pedido aprovado! ID: {result.TransactionId}");
-            }
-            else
-            {
-                Console.WriteLine($"❌ Pagamento recusado: {result.Message}");
-            }
-        }
-    }
-
+    
     class Program
     {
         static void Main(string[] args)
